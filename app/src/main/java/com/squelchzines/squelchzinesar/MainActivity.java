@@ -67,7 +67,7 @@ public class MainActivity extends AppCompatActivity {
     private Session mArCoreSession;
     private boolean mUserRequestedInstall = true;
 
-    private ArFragment mArFragment;
+    private AugmentedVideoFragment mArFragment;
     private ImageView mFitToScanView;
 
     @Nullable
@@ -82,8 +82,8 @@ public class MainActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
-        mArFragment = (ArFragment) getSupportFragmentManager().findFragmentById(R.id.ux_fragment);
-        mArFragment.getArSceneView().getScene().addOnUpdateListener(this::onUpdateFrame);
+        mArFragment = (AugmentedVideoFragment) getSupportFragmentManager().findFragmentById(R.id.ux_fragment);
+        mArFragment.addOnUpdateListener(this::onUpdateFrame);
 
         mFitToScanView = findViewById(R.id.image_view_fit_to_scan);
 
@@ -151,31 +151,16 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void configureSession() {
-        Config config = new Config(mArCoreSession);
-        if (!setupPresetImageDb(config)) {
-            Toast.makeText(this, "Failed to load", Toast.LENGTH_SHORT).show();
-        }
+        Config config = mArFragment.getSessionConfiguration(mArCoreSession);
+        // Disable cloud anchor mode because we are not using multi device.
         config.setCloudAnchorMode(Config.CloudAnchorMode.DISABLED);
+        // Enable auto focus of camera
         config.setFocusMode(Config.FocusMode.AUTO);
+        // Set light estimation mode to adapt to surrounding lighting.
         config.setLightEstimationMode(Config.LightEstimationMode.AMBIENT_INTENSITY);
-        config.setPlaneFindingMode(Config.PlaneFindingMode.HORIZONTAL);
+        // Configure frame update to use latest image obtained from camera.
         config.setUpdateMode(Config.UpdateMode.LATEST_CAMERA_IMAGE);
         mArCoreSession.configure(config);
-    }
-
-    private boolean setupPresetImageDb(Config config) {
-        try {
-            InputStream inputStream = getAssets().open(IMAGE_DATABASE);
-            AugmentedImageDatabase db = AugmentedImageDatabase.deserialize(mArCoreSession, inputStream);
-            config.setAugmentedImageDatabase(db);
-            return true;
-        } catch (IOException e) {
-            e.printStackTrace();
-            Log.e(TAG, "Failed to load AugmentedImageDatabase");
-            Toast.makeText(this, "Failed to load AugmentedImageDatabase", Toast.LENGTH_LONG)
-                    .show();
-            return false;
-        }
     }
 
     private void onUpdateFrame(FrameTime frameTime) {
@@ -195,19 +180,16 @@ public class MainActivity extends AppCompatActivity {
                 case TRACKING:
                     mFitToScanView.setVisibility(View.GONE);
                     if (!mAugmentedImageNodeMap.containsKey(augmentedImage)) {
-
+                        if (augmentedImage.getIndex() == 0) {
+                            // TODO: Show something
+                        } else if (augmentedImage.getIndex() == 1) {
+                            // TODO: Show something
+                        }
                     }
                     break;
                 case STOPPED:
                     mAugmentedImageNodeMap.remove(augmentedImage);
                     break;
-            }
-            if (augmentedImage.getTrackingState() == TrackingState.TRACKING) {
-                if (augmentedImage.getIndex() == 0) {
-                    // TODO: Show something
-                } else if (augmentedImage.getIndex() == 1) {
-                    // TODO: Show something
-                }
             }
         }
     }
@@ -215,11 +197,9 @@ public class MainActivity extends AppCompatActivity {
     @Override
     protected void onResume() {
         super.onResume();
-        checkOpenGlesVersion();
         requestPermission();
         checkArCore();
         configureSession();
-        initializeArFragment();
         try {
             mArCoreSession.resume();
             mArFragment.getArSceneView().resume();
@@ -294,18 +274,6 @@ public class MainActivity extends AppCompatActivity {
                 break;
             default:
                 super.onRequestPermissionsResult(requestCode, permissions, grantResults);
-        }
-    }
-
-    private void checkOpenGlesVersion() {
-        String openGlVersionString =
-                ((ActivityManager) getSystemService(Context.ACTIVITY_SERVICE))
-                .getDeviceConfigurationInfo()
-                .getGlEsVersion();
-
-        if (Double.parseDouble(openGlVersionString) < MIN_OPENGL_VERSION) {
-            Toast.makeText(this, "Sceneform requires OpenGL ES 3.0 or later", Toast.LENGTH_SHORT)
-                    .show();
         }
     }
 
