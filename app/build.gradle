@@ -38,7 +38,6 @@ dependencies {
     annotationProcessor 'com.jakewharton:butterknife-compiler:8.8.1'
 }
 
-
 sceneform.asset('sampledata/models/quad.obj',
         'sampledata/models/quad.mat',
         'sampledata/models/quad.sfa',

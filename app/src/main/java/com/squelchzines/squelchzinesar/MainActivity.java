@@ -1,28 +1,21 @@
 package com.squelchzines.squelchzinesar;
 
 import android.Manifest;
-import android.app.ActivityManager;
-import android.content.Context;
 import android.content.Intent;
-import android.media.MediaPlayer;
 import android.net.Uri;
 import android.provider.Settings;
 import android.support.annotation.NonNull;
-import android.support.annotation.Nullable;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.content.ContextCompat;
 import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
-import android.util.Log;
 import android.view.View;
 import android.widget.ImageView;
 import android.widget.Toast;
 
-import com.google.ar.core.Anchor;
 import com.google.ar.core.ArCoreApk;
 import com.google.ar.core.AugmentedImage;
-import com.google.ar.core.AugmentedImageDatabase;
 import com.google.ar.core.Config;
 import com.google.ar.core.Frame;
 import com.google.ar.core.Session;
@@ -33,19 +26,9 @@ import com.google.ar.core.exceptions.UnavailableArcoreNotInstalledException;
 import com.google.ar.core.exceptions.UnavailableDeviceNotCompatibleException;
 import com.google.ar.core.exceptions.UnavailableSdkTooOldException;
 import com.google.ar.core.exceptions.UnavailableUserDeclinedInstallationException;
-import com.google.ar.sceneform.AnchorNode;
 import com.google.ar.sceneform.FrameTime;
-import com.google.ar.sceneform.Node;
-import com.google.ar.sceneform.math.Vector3;
-import com.google.ar.sceneform.rendering.ExternalTexture;
-import com.google.ar.sceneform.rendering.ModelRenderable;
-import com.google.ar.sceneform.ux.ArFragment;
 
-import java.io.IOException;
-import java.io.InputStream;
 import java.util.Collection;
-import java.util.HashMap;
-import java.util.Map;
 
 import static android.content.pm.PackageManager.PERMISSION_GRANTED;
 
@@ -54,15 +37,7 @@ public class MainActivity extends AppCompatActivity {
     private static final String TAG = MainActivity.class.getSimpleName();
 
     private static final int REQUEST_CODE_CAMERA = 1;
-    private static final double MIN_OPENGL_VERSION = 3.0;
     private static final String PERMISSION_CAMERA = Manifest.permission.CAMERA;
-
-    private static final String IMAGE_DATABASE = "output_db.imgdb";
-    private static final String QUAD_MODEL = "quad.sfb";
-    private static final String VIDEO_TEXTURE = "videoTexture";
-
-    // Height of video in world space
-    private static final float VIDEO_HEIGHT_METERS = 0.2f;
 
     private Session mArCoreSession;
     private boolean mUserRequestedInstall = true;
@@ -70,12 +45,7 @@ public class MainActivity extends AppCompatActivity {
     private AugmentedVideoFragment mArFragment;
     private ImageView mFitToScanView;
 
-    @Nullable
-    private ModelRenderable mVideoRenderable;
-    private MediaPlayer mMediaPlayer;
-
-    // Stores detected augmented image and their respective nodes.
-    private final Map<AugmentedImage, Node> mAugmentedImageNodeMap = new HashMap<>();
+    private AugmentedVideoNode mCurrentNode;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -86,68 +56,6 @@ public class MainActivity extends AppCompatActivity {
         mArFragment.addOnUpdateListener(this::onUpdateFrame);
 
         mFitToScanView = findViewById(R.id.image_view_fit_to_scan);
-
-        ExternalTexture texture = new ExternalTexture();
-
-        mMediaPlayer = MediaPlayer.create(this, R.raw.kickflip);
-        mMediaPlayer.setSurface(texture.getSurface());
-        mMediaPlayer.setLooping(true);
-
-        ModelRenderable.builder()
-                .setSource(this, Uri.parse(QUAD_MODEL))
-                .build()
-                .thenAccept(
-                        renderable -> {
-                            mVideoRenderable = renderable;
-                            renderable.getMaterial().setExternalTexture(VIDEO_TEXTURE, texture);
-                        })
-                .exceptionally(
-                        throwable -> {
-                            Toast.makeText(this, "Unable to load video renderable", Toast.LENGTH_SHORT).show();
-                            return null;
-                        });
-
-        mArFragment.setOnTapArPlaneListener(
-                (hitResult, plane, motionEvent) -> {
-                    if (mVideoRenderable == null) {
-                        return;
-                    }
-                    Anchor anchor = hitResult.createAnchor();
-                    AnchorNode anchorNode = new AnchorNode(anchor);
-                    anchorNode.setParent(mArFragment.getArSceneView().getScene());
-
-                    Node videoNode = new Node();
-                    videoNode.setParent(anchorNode);
-
-                    float videoWidth = mMediaPlayer.getVideoWidth();
-                    float videoHeight = mMediaPlayer.getVideoHeight();
-                    videoNode.setLocalScale(
-                            new Vector3(
-                                    VIDEO_HEIGHT_METERS * (videoWidth / videoHeight), VIDEO_HEIGHT_METERS, 1.0f));
-
-                    if (!mMediaPlayer.isPlaying()) {
-                        mMediaPlayer.start();
-                        texture
-                                .getSurfaceTexture()
-                                .setOnFrameAvailableListener(
-                                        (surfaceTexture) -> {
-                                            videoNode.setRenderable(mVideoRenderable);
-                                            texture.getSurfaceTexture().setOnFrameAvailableListener(null);
-                                        }
-                                );
-                    } else {
-                        videoNode.setRenderable(mVideoRenderable);
-                    }
-                }
-        );
-    }
-
-    private void initializeArFragment() {
-        mArFragment.getArSceneView().setupSession(mArCoreSession);
-        // Turn off plane discovery mode since we are using image scanning.
-        mArFragment.getPlaneDiscoveryController().hide();
-        mArFragment.getPlaneDiscoveryController().setInstructionView(null);
-        mArFragment.getArSceneView().getPlaneRenderer().setEnabled(false);
     }
 
     private void configureSession() {
@@ -161,6 +69,7 @@ public class MainActivity extends AppCompatActivity {
         // Configure frame update to use latest image obtained from camera.
         config.setUpdateMode(Config.UpdateMode.LATEST_CAMERA_IMAGE);
         mArCoreSession.configure(config);
+        mArFragment.getArSceneView().setupSession(mArCoreSession);
     }
 
     private void onUpdateFrame(FrameTime frameTime) {
@@ -175,20 +84,32 @@ public class MainActivity extends AppCompatActivity {
 
         for (AugmentedImage augmentedImage : updatedAugmentedImages) {
             switch (augmentedImage.getTrackingState()) {
-                case PAUSED:
-                    break;
                 case TRACKING:
                     mFitToScanView.setVisibility(View.GONE);
-                    if (!mAugmentedImageNodeMap.containsKey(augmentedImage)) {
+                    if (mCurrentNode == null || !mCurrentNode.getImage().equals(augmentedImage)) {
+                        if (mCurrentNode != null) {
+                            mCurrentNode.stop();
+                            mArFragment.getArSceneView().getScene().removeChild(mCurrentNode);
+                        }
+
                         if (augmentedImage.getIndex() == 0) {
-                            // TODO: Show something
+                            AugmentedVideoNode node = new AugmentedVideoNode(this, R.raw.kickflip);
+                            node.setImage(augmentedImage);
+                            mArFragment.getArSceneView().getScene().addChild(node);
+                            mCurrentNode = node;
                         } else if (augmentedImage.getIndex() == 1) {
-                            // TODO: Show something
+                            AugmentedVideoNode node = new AugmentedVideoNode(this, R.raw.chicken);
+                            node.setImage(augmentedImage);
+                            mArFragment.getArSceneView().getScene().addChild(node);
+                            mCurrentNode = node;
                         }
                     }
+
                     break;
                 case STOPPED:
-                    mAugmentedImageNodeMap.remove(augmentedImage);
+                    if (mCurrentNode != null) {
+                        mArFragment.getArSceneView().getScene().removeChild(mCurrentNode);
+                    }
                     break;
             }
         }
@@ -209,7 +130,7 @@ public class MainActivity extends AppCompatActivity {
                     .show();
             mArCoreSession = null;
         }
-        if (mAugmentedImageNodeMap.isEmpty()) {
+        if (mCurrentNode == null) {
             mFitToScanView.setVisibility(View.VISIBLE);
         }
     }
@@ -226,11 +147,6 @@ public class MainActivity extends AppCompatActivity {
     @Override
     protected void onDestroy() {
         super.onDestroy();
-
-        if (mMediaPlayer != null) {
-            mMediaPlayer.release();
-            mMediaPlayer = null;
-        }
     }
 
     private void requestPermission() {
