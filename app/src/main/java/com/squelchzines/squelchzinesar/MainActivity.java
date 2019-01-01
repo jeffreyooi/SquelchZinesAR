@@ -144,6 +144,10 @@ public class MainActivity extends AppCompatActivity {
 
     private void initializeArFragment() {
         mArFragment.getArSceneView().setupSession(mArCoreSession);
+        // Turn off plane discovery mode since we are using image scanning.
+        mArFragment.getPlaneDiscoveryController().hide();
+        mArFragment.getPlaneDiscoveryController().setInstructionView(null);
+        mArFragment.getArSceneView().getPlaneRenderer().setEnabled(false);
     }
 
     private void configureSession() {
