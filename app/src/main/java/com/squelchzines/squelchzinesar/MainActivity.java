@@ -57,6 +57,10 @@ public class MainActivity extends AppCompatActivity {
     private static final double MIN_OPENGL_VERSION = 3.0;
     private static final String PERMISSION_CAMERA = Manifest.permission.CAMERA;
 
+    private static final String IMAGE_DATABASE = "output_db.imgdb";
+    private static final String QUAD_MODEL = "quad.sfb";
+    private static final String VIDEO_TEXTURE = "videoTexture";
+
     // Height of video in world space
     private static final float VIDEO_HEIGHT_METERS = 0.2f;
 
@@ -90,12 +94,12 @@ public class MainActivity extends AppCompatActivity {
         mMediaPlayer.setLooping(true);
 
         ModelRenderable.builder()
-                .setSource(this, Uri.parse("quad.sfb"))
+                .setSource(this, Uri.parse(QUAD_MODEL))
                 .build()
                 .thenAccept(
                         renderable -> {
                             mVideoRenderable = renderable;
-                            renderable.getMaterial().setExternalTexture("videoTexture", texture);
+                            renderable.getMaterial().setExternalTexture(VIDEO_TEXTURE, texture);
                         })
                 .exceptionally(
                         throwable -> {
@@ -157,7 +161,7 @@ public class MainActivity extends AppCompatActivity {
 
     private boolean setupPresetImageDb(Config config) {
         try {
-            InputStream inputStream = getAssets().open("output_db.imgdb");
+            InputStream inputStream = getAssets().open(IMAGE_DATABASE);
             AugmentedImageDatabase db = AugmentedImageDatabase.deserialize(mArCoreSession, inputStream);
             config.setAugmentedImageDatabase(db);
             return true;
