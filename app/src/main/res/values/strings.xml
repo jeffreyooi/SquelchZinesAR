@@ -1,0 +1,12 @@
+<resources>
+    <string name="app_name">SquelchZinesAR</string>
+    <string name="permission_required">Permission required</string>
+    <string name="permission_rationale">This app requires access to camera to detect surfaces and images in order to show video overlay of exhibitions.</string>
+    <string name="go_to_settings">Go to settings</string>
+    <string name="ar_core_error_user_declined_installation">User declined AR Core installation.</string>
+    <string name="ar_core_error_device_not_supported">AR Core not supported on this device.</string>
+    <string name="ar_core_error_not_installed">AR Core not installed on this device.</string>
+    <string name="ar_core_error_outdated">AR Core installed is outdated.</string>
+    <string name="ar_core_error_sdk_low">AR Core is supported but Android version is too low.</string>
+    <string name="fit_image_to_scan">Fit image into the square frame to scan the image.</string>
+</resources>

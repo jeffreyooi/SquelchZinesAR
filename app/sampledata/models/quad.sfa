@@ -1,0 +1,38 @@
+{
+  materials: [
+    {
+      name: 'DefaultMaterial',
+      parameters: [
+        {
+          videoTexture: {
+            external_path: 'MISSING_PATH',
+          },
+        },
+        {
+          keyColor: [
+            0,
+            0,
+            0,
+            0,
+          ],
+        },
+        {
+          disableChromaKey: false,
+        },
+      ],
+      source: 'sampledata/models/quad.mat',
+    },
+  ],
+  model: {
+    attributes: [
+      'Position',
+      'TexCoord',
+      'Orientation',
+    ],
+    collision: {},
+    file: 'sampledata/models/quad.obj',
+    name: 'quad',
+    recenter: 'root',
+  },
+  version: '0.54:1',
+}
