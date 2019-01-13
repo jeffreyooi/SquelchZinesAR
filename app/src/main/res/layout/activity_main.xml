@@ -30,4 +30,14 @@
         android:textSize="24sp"
         android:textAlignment="center"/>
 
+    <ImageButton
+        android:id="@+id/image_button_help"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:src="@drawable/ic_help_outline_white_24dp"
+        android:background="@null"
+        android:layout_gravity="end"
+        android:layout_margin="8dp"
+        android:contentDescription="@string/help"/>
+
 </FrameLayout>

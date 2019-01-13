@@ -11,6 +11,7 @@ import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.view.View;
+import android.widget.ImageButton;
 import android.widget.ImageView;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -46,6 +47,7 @@ public class MainActivity extends AppCompatActivity {
     private AugmentedVideoFragment mArFragment;
     private ImageView mFitToScanView;
     private TextView mFitToScanTextView;
+    private ImageButton mHelpButton;
 
     private AugmentedVideoNode mCurrentNode;
 
@@ -59,6 +61,7 @@ public class MainActivity extends AppCompatActivity {
 
         mFitToScanView = findViewById(R.id.image_view_fit_to_scan);
         mFitToScanTextView = findViewById(R.id.text_view_fit_to_scan);
+        mHelpButton = findViewById(R.id.image_button_help);
     }
 
     private void configureSession() {

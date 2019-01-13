@@ -9,4 +9,5 @@
     <string name="ar_core_error_outdated">AR Core installed is outdated.</string>
     <string name="ar_core_error_sdk_low">AR Core is supported but Android version is too low.</string>
     <string name="fit_image_to_scan">Fit image into the square frame to scan the image.</string>
+    <string name="help">Help</string>
 </resources>
