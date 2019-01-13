@@ -19,4 +19,14 @@
         android:background="@mipmap/fit_to_scan"
         android:contentDescription="@string/fit_image_to_scan"/>
 
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="center_horizontal|bottom"
+        android:padding="8dp"
+        android:layout_marginBottom="24dp"
+        android:text="@string/fit_image_to_scan"
+        android:textSize="24sp"
+        android:textAlignment="center"/>
+
 </FrameLayout>
