@@ -1,4 +1,6 @@
 language: android
+jdk: oraclejdk8
+
 android:
     components:
         # Android SDK tools
@@ -13,3 +15,19 @@ android:
         
         # Additional components
         - extra-google-google_play_services
+        - extra-android-support
+        
+        - sys-img-armeabi-v7a-android-26
+        
+env:
+    matrix:
+        - "ANDROID_TARGET=android-26 ANDROID_ABI=armeabi-v7a"
+        
+before_cache:
+    - rm -f $HOME/.gradle/caches/modules-2/modules-2.lock
+    - rm -fr $HOME/.gradle/caches/*/plugin-resolution
+    
+cache:
+    - $HOME/.gradle/caches/
+    - $HOME/.gradle/wrapper/
+    - $HOME/.android/build-cache
