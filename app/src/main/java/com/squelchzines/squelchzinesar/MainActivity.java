@@ -12,6 +12,7 @@ import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.view.View;
 import android.widget.ImageView;
+import android.widget.TextView;
 import android.widget.Toast;
 
 import com.google.ar.core.ArCoreApk;
@@ -44,6 +45,7 @@ public class MainActivity extends AppCompatActivity {
 
     private AugmentedVideoFragment mArFragment;
     private ImageView mFitToScanView;
+    private TextView mFitToScanTextView;
 
     private AugmentedVideoNode mCurrentNode;
 
@@ -56,6 +58,7 @@ public class MainActivity extends AppCompatActivity {
         mArFragment.addOnUpdateListener(this::onUpdateFrame);
 
         mFitToScanView = findViewById(R.id.image_view_fit_to_scan);
+        mFitToScanTextView = findViewById(R.id.text_view_fit_to_scan);
     }
 
     private void configureSession() {
@@ -86,6 +89,7 @@ public class MainActivity extends AppCompatActivity {
             switch (augmentedImage.getTrackingState()) {
                 case TRACKING:
                     mFitToScanView.setVisibility(View.GONE);
+                    mFitToScanTextView.setVisibility(View.GONE);
                     if (mCurrentNode == null || !mCurrentNode.getImage().equals(augmentedImage)) {
                         if (mCurrentNode != null) {
                             mCurrentNode.stop();
@@ -132,6 +136,7 @@ public class MainActivity extends AppCompatActivity {
         }
         if (mCurrentNode == null) {
             mFitToScanView.setVisibility(View.VISIBLE);
+            mFitToScanTextView.setVisibility(View.VISIBLE);
         }
     }
 

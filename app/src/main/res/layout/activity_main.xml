@@ -20,6 +20,7 @@
         android:contentDescription="@string/fit_image_to_scan"/>
 
     <TextView
+        android:id="@+id/text_view_fit_to_scan"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_gravity="center_horizontal|bottom"
