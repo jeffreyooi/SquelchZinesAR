@@ -1,15 +1,11 @@
 package com.squelchzines.squelchzinesar;
 
-import android.Manifest;
-import android.content.Intent;
-import android.net.Uri;
-import android.provider.Settings;
+import android.content.res.AssetFileDescriptor;
+import android.media.MediaPlayer;
 import android.support.annotation.NonNull;
-import android.support.v4.app.ActivityCompat;
-import android.support.v4.content.ContextCompat;
-import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
+import android.text.TextUtils;
 import android.view.View;
 import android.widget.ImageButton;
 import android.widget.ImageView;
@@ -29,7 +25,9 @@ import com.google.ar.core.exceptions.UnavailableDeviceNotCompatibleException;
 import com.google.ar.core.exceptions.UnavailableSdkTooOldException;
 import com.google.ar.core.exceptions.UnavailableUserDeclinedInstallationException;
 import com.google.ar.sceneform.FrameTime;
+import com.squelchzines.squelchzinesar.util.PermissionUtil;
 
+import java.io.IOException;
 import java.util.Collection;
 
 import static android.content.pm.PackageManager.PERMISSION_GRANTED;
@@ -37,9 +35,6 @@ import static android.content.pm.PackageManager.PERMISSION_GRANTED;
 public class MainActivity extends AppCompatActivity {
 
     private static final String TAG = MainActivity.class.getSimpleName();
-
-    private static final int REQUEST_CODE_CAMERA = 1;
-    private static final String PERMISSION_CAMERA = Manifest.permission.CAMERA;
 
     private Session mArCoreSession;
     private boolean mUserRequestedInstall = true;
@@ -158,40 +153,14 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void requestPermission() {
-        if (ContextCompat.checkSelfPermission(
-                this, PERMISSION_CAMERA) != PERMISSION_GRANTED) {
-            if (ActivityCompat.shouldShowRequestPermissionRationale(
-                    this, PERMISSION_CAMERA)) {
-                showRequestPermissionRationaleDialog();
-            } else {
-                ActivityCompat.requestPermissions(
-                        this, new String[] { PERMISSION_CAMERA }, REQUEST_CODE_CAMERA);
-            }
-        }
-    }
-
-    private void launchPermissionSettings() {
-        Intent intent = new Intent();
-        intent.setAction(Settings.ACTION_APPLICATION_DETAILS_SETTINGS);
-        intent.setData(Uri.fromParts("package", getPackageName(), null));
-        startActivity(intent);
-    }
-
-    private void showRequestPermissionRationaleDialog() {
-        AlertDialog rationaleDialog = new AlertDialog.Builder(this)
-                .setTitle(R.string.permission_required)
-                .setMessage(R.string.permission_rationale)
-                .setPositiveButton(
-                        R.string.go_to_settings, (dialog, which) -> launchPermissionSettings())
-                .create();
-        rationaleDialog.show();
+        PermissionUtil.requestCameraPermission(this);
     }
 
     @Override
     public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions,
                                            @NonNull int[] grantResults) {
         switch (requestCode) {
-            case REQUEST_CODE_CAMERA:
+            case PermissionUtil.REQUEST_CODE_CAMERA:
                 if (grantResults[0] != PERMISSION_GRANTED) {
                     requestPermission();
                 }
